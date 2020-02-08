@@ -1,0 +1,21 @@
+domain_name: 'site.dz'
+http_port: 80
+loadbalancing: yes
+ssl_activated: false
+balancer_manager: true
+urls:
+  - url: 'service'
+    through: 'service'
+  - url: 'service-2'
+    through: 'service-2'
+balancers:
+  - url: 'service'
+    method: 'byrequests'
+    proxies:
+      - 'http://192.168.5.158:80'
+      - 'http://192.168.5.168:80'
+configs: 
+  - {file: 'httpd.conf', path: '/apache/conf'}
+
+  - file: 'lb.conf'
+    path: '/apache/conf/extra'

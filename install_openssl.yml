@@ -1,0 +1,51 @@
+---
+- name: install openssl 
+  # strategy: debug
+  gather_facts: no
+  hosts: 
+    cluster
+  tasks:
+    - name: create scripts folder if not exists
+      become: yes
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0777
+      with_items:
+        - '/usr/src'
+        - '/usr/bin'
+        - '/usr/src/apache'
+    # - name: copying openssl to hosts
+    #   copy:
+    #     src: '/media/hamza/20363E1F363DF5FE/openssl-1.0.2t/apache/openssl-1.0.2t.tar.gz' 
+    #     dest: '/usr/bin/src'
+    # - name: ensuring the dependancies are installed
+
+    - name: unarchiving openssl in the host machine
+      become: yes
+      unarchive:
+        src: './apache/openssl-1.0.2t.tar.gz'
+        dest: '/usr/src'
+    - shell: "cd /usr/src/openssl-1.0.2t && ./config --prefix=/usr/local/ssl shared zlib"
+      become: yes
+    - name: cleaning openssl installation
+      become: yes
+      make:
+        chdir: /usr/src/openssl-1.0.2t
+        target: clean
+    - name: building openssl
+      become: yes
+      make:
+        chdir: /usr/src/openssl-1.0.2t
+      register: out
+      tags:
+        - build
+      ignore_errors: true
+    - debug: msg="{{out.stderr}}"
+      when: out.failed
+      failed_when: out.failed
+    - name: copying to the right direction
+      become: yes
+      make:
+        chdir: /usr/src/openssl-1.0.2t
+        target: install

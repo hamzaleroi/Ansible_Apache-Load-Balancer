@@ -1,0 +1,21 @@
+ProxyRequests off
+
+{% for balancer in balancers %}
+<Proxy balancer://{{balancer.url}}> 
+{% for proxy in balancer.proxies %}
+    BalancerMember {{proxy}}
+{% endfor %}
+ProxySet lbmethod={{balancer.method}}
+</Proxy> 
+{%endfor%}
+
+{% if balancer_manager %}
+< Location /balancer-manager> 
+    SetHandler balancer-manager
+< /Location> 
+ProxyPass /balancer-manager !
+{%endif%}
+
+{%for url in urls%}
+ProxyPass {{url.url}} balancer://{{url.through}}/
+{%endfor%}

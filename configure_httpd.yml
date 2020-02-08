@@ -1,0 +1,20 @@
+---
+- name: configure httpd 
+  any_errors_fatal: no
+  gather_facts: no
+  hosts:
+    cluster
+  tasks:
+    - name: ensure the folder exists
+      become: yes
+      register: var
+      file:
+        path: "{{item.path}}"
+        state: directory
+        mode: 0777
+      with_items: "{{configs | default([])}}"
+    - name: copy the template to the destination
+      template:
+        src:  "./{{item.file}}.j2"
+        dest: "{{item.path +'/'+ item.file  | default ( '/apache/conf/'+item.file)}}"
+      with_items: "{{configs | default([])}}"
